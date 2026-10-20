@@ -138,4 +138,4 @@ The following screenshots show the main RailConnect API workflows in Swagger UI:
 
 ### Tests
 
-![Pytest results: 6 passed](screenshots/09-tests.png)
+![Pytest results: 8 passed](screenshots/09-tests.png)
