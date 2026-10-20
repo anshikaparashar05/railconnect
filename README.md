@@ -69,15 +69,17 @@ railconnect/
 ├── requirements.txt
 └── README.md
 
+```
+
 ## 📸 API Screenshots
 
 The following screenshots show the main RailConnect API workflows in Swagger UI:
 
 ### Authentication
 
-| Registration | Login | Profile response |
+| Registration | Login | Unauthorized request (401) |
 |---|---|---|
-| ![Passenger registration](screenshots/01-register.png) | ![Successful login](screenshots/02-login.png) | ![Authenticated profile response](screenshots/03-profile.png) |
+| ![Passenger registration](screenshots/01-register.png) | ![Successful login](screenshots/02-login.png) | ![Unauthorized request (401) response](screenshots/03-unauthorized.png) |
 
 ### Admin and train search
 
