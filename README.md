@@ -77,7 +77,7 @@ The following screenshots show the main RailConnect API workflows in Swagger UI:
 
 | Registration | Login | Profile response |
 |---|---|---|
-| ![Passenger registration](screenshots/01-register.png) | ![Successful login](screenshots/02-login.png) | ![Authenticated profile response](screenshots/03-unauthorized.png) |
+| ![Passenger registration](screenshots/01-register.png) | ![Successful login](screenshots/02-login.png) | ![Authenticated profile response](screenshots/03-profile.png) |
 
 ### Admin and train search
 
