@@ -2,11 +2,12 @@ import random
 import string
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import update
 from sqlmodel import Session, select
 
+from app.auth.dependencies import get_current_user
 from app.database import get_session
 from app.models import Booking, Train, User
-from app.auth.dependencies import get_current_user
 
 router = APIRouter(
     prefix="/bookings",
@@ -27,35 +28,29 @@ def create_booking(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
-    train = session.get(Train, train_id)
-
-    if not train:
-        raise HTTPException(
-            status_code=404,
-            detail="Train not found"
+    # Claim a seat with one conditional write. Competing updates are serialized
+    # by the database, so only a request that sees availability can claim a seat.
+    train = session.exec(
+        update(Train)
+        .where(
+            Train.id == train_id,
+            Train.is_active.is_(True),
+            Train.available_seats > 0,
         )
+        .values(available_seats=Train.available_seats - 1)
+        .returning(Train.total_seats, Train.available_seats, Train.fare)
+    ).first()
 
-    if not train.is_active:
-        raise HTTPException(
-            status_code=400,
-            detail="Train is inactive"
-        )
+    if train is None:
+        current_train = session.get(Train, train_id)
+        if current_train is None:
+            raise HTTPException(status_code=404, detail="Train not found")
+        if not current_train.is_active:
+            raise HTTPException(status_code=400, detail="Train is inactive")
+        raise HTTPException(status_code=400, detail="All seats are booked")
 
-    if train.available_seats <= 0:
-        raise HTTPException(
-            status_code=400,
-            detail="All seats are booked"
-        )
-
-    # Assign next seat number
-    seat_number = train.total_seats - train.available_seats + 1
-
-    # Reduce available seats
-    train.available_seats -= 1
-
+    seat_number = train.total_seats - train.available_seats
     pnr = generate_pnr()
-
-    # Make sure PNR is unique
     while session.exec(
         select(Booking).where(Booking.pnr == pnr)
     ).first():
@@ -64,18 +59,15 @@ def create_booking(
     booking = Booking(
         pnr=pnr,
         user_id=current_user.id,
-        train_id=train.id,
+        train_id=train_id,
         passenger_name=passenger_name,
         seat_number=seat_number,
         fare=train.fare,
         status="confirmed",
     )
-
     session.add(booking)
-    session.add(train)
     session.commit()
     session.refresh(booking)
-
     return booking
 
 
@@ -85,11 +77,8 @@ def get_my_bookings(
     session: Session = Depends(get_session),
 ):
     bookings = session.exec(
-        select(Booking).where(
-            Booking.user_id == current_user.id
-        )
+        select(Booking).where(Booking.user_id == current_user.id)
     ).all()
-
     return bookings
 
 
@@ -107,11 +96,7 @@ def get_booking(
     ).first()
 
     if not booking:
-        raise HTTPException(
-            status_code=404,
-            detail="Booking not found"
-        )
-
+        raise HTTPException(status_code=404, detail="Booking not found")
     return booking
 
 
@@ -121,38 +106,45 @@ def cancel_booking(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
-    booking = session.exec(
-        select(Booking).where(
+    cancelled = session.exec(
+        update(Booking)
+        .where(
             Booking.pnr == pnr,
-            Booking.user_id == current_user.id
+            Booking.user_id == current_user.id,
+            Booking.status == "confirmed",
         )
+        .values(status="cancelled")
+        .returning(Booking.train_id, Booking.seat_number)
     ).first()
 
-    if not booking:
-        raise HTTPException(
-            status_code=404,
-            detail="Booking not found"
+    if cancelled is None:
+        booking = session.exec(
+            select(Booking).where(
+                Booking.pnr == pnr,
+                Booking.user_id == current_user.id,
+            )
+        ).first()
+        if booking is None:
+            raise HTTPException(status_code=404, detail="Booking not found")
+        raise HTTPException(status_code=400, detail="Booking already cancelled")
+
+    restored = session.exec(
+        update(Train)
+        .where(
+            Train.id == cancelled.train_id,
+            Train.available_seats < Train.total_seats,
         )
+        .values(available_seats=Train.available_seats + 1)
+        .returning(Train.id)
+    ).first()
 
-    if booking.status == "cancelled":
-        raise HTTPException(
-            status_code=400,
-            detail="Booking already cancelled"
-        )
+    if restored is None:
+        session.rollback()
+        raise HTTPException(status_code=409, detail="Unable to restore the seat")
 
-    train = session.get(Train, booking.train_id)
-
-    if train:
-        train.available_seats += 1
-        session.add(train)
-
-    booking.status = "cancelled"
-
-    session.add(booking)
     session.commit()
-
     return {
         "message": "Booking cancelled successfully",
-        "pnr": booking.pnr,
-        "seat_number": booking.seat_number,
+        "pnr": pnr,
+        "seat_number": cancelled.seat_number,
     }
