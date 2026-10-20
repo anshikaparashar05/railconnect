@@ -139,3 +139,12 @@ The following screenshots show the main RailConnect API workflows in Swagger UI:
 ### Tests
 
 ![Pytest results: 8 passed](screenshots/09-tests.png)
+### Password reset
+
+![Forgot password response](screenshots/11-forgot-password.png)
+
+![Successful password reset](screenshots/12-reset-password.png)
+
+### Booking history
+
+![Booking history response](screenshots/10-booking-history.png)
