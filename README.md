@@ -92,3 +92,7 @@ The following screenshots show the main RailConnect API workflows in Swagger UI:
 | Submit booking | Booking confirmation with PNR | Cancel booking |
 |---|---|---|
 | ![Booking request](screenshots/07.1-booking-pnr.png) | ![Booking response with PNR](screenshots/07.2-booking-pnr.png) | ![Booking cancellation response](screenshots/08-cancellation.png) |
+
+### Tests
+
+![Pytest results: 4 passed](screenshots/09-tests.png)
