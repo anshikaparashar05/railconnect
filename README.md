@@ -68,3 +68,25 @@ railconnect/
 ├── .gitignore
 ├── requirements.txt
 └── README.md
+
+## 📸 API Screenshots
+
+The following screenshots show the main RailConnect API workflows in Swagger UI:
+
+### Authentication
+
+| Registration | Login | Profile response |
+|---|---|---|
+| ![Passenger registration](screenshots/01-register.png) | ![Successful login](screenshots/02-login.png) | ![Authenticated profile response](screenshots/03-unauthorized.png) |
+
+### Admin and train search
+
+| Create station | Create train | Search trains |
+|---|---|---|
+| ![Admin creates a station](screenshots/04-admin-station.png) | ![Admin creates a train](screenshots/05-admin-train.png) | ![Train search response](screenshots/06-train-search.png) |
+
+### Booking and cancellation
+
+| Submit booking | Booking confirmation with PNR | Cancel booking |
+|---|---|---|
+| ![Booking request](screenshots/07.1-booking-pnr.png) | ![Booking response with PNR](screenshots/07.2-booking-pnr.png) | ![Booking cancellation response](screenshots/08-cancellation.png) |
