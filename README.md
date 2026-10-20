@@ -71,6 +71,49 @@ railconnect/
 
 ```
 
+## 🚀 Setup and Run
+
+Use Python 3.11 or newer. From the project directory:
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+```
+
+Set `SECRET_KEY` in `.env` to a private random value. You can generate one with:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+Keep `.env` private; Git ignores it. Start the API with:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Open Swagger UI at `http://127.0.0.1:8000/docs`. Run the tests with:
+
+```bash
+pytest -q
+```
+
+## 🔌 Main API Endpoints
+
+| Purpose | Endpoint |
+|---|---|
+| Register and log in | `POST /auth/register`, `POST /auth/login` |
+| View profile and log out | `GET /auth/me`, `POST /auth/logout` |
+| Request and apply password reset | `POST /auth/forgot-password`, `POST /auth/reset-password` |
+| Manage stations | `POST /admin/stations`, `GET /admin/stations` |
+| Manage trains | `POST /admin/trains`, `PUT /admin/trains/{train_id}`, `PATCH /admin/trains/{train_id}/deactivate` |
+| Search trains | `GET /trains/search` |
+| Book, view, and cancel tickets | `POST /bookings/`, `GET /bookings/`, `GET /bookings/{pnr}`, `DELETE /bookings/{pnr}` |
+
+Admin endpoints require an authenticated user with the `admin` role. Password reset is a development flow: the API returns a short-lived, single-use reset token instead of sending email. Logout is client-side; discard the bearer token on the client. Existing access tokens remain usable until they expire.
+
 ## 📸 API Screenshots
 
 The following screenshots show the main RailConnect API workflows in Swagger UI:

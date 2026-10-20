@@ -157,7 +157,12 @@ def reset_password(
             detail="Reset token already used"
         )
 
-    if reset_token.expires_at < datetime.now(timezone.utc):
+    expires_at = reset_token.expires_at
+    if expires_at.tzinfo is None:
+        # SQLite may return stored datetimes without timezone information.
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+    if expires_at < datetime.now(timezone.utc):
         raise HTTPException(
             status_code=400,
             detail="Reset token expired"
